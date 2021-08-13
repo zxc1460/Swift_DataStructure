@@ -1,9 +1,9 @@
 import Foundation
 
 struct Heap<T: Comparable> {
-    private enum ChildLocation {
-        case left
-        case right
+    private enum ChildLocation: Int {
+        case left = 1
+        case right = 2
     }
     
     private var elements = [T]()
@@ -33,7 +33,7 @@ struct Heap<T: Comparable> {
     }
     
     private func childIndex(of index: Int, direction: ChildLocation) -> Int {
-        return direction == .left ? (index * 2) + 1 : (index * 2) + 2
+        return (index * 2) + direction.rawValue
     }
     
     private func parentIndex(of index: Int) -> Int {
