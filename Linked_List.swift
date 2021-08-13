@@ -2,131 +2,126 @@ import Foundation
 
 class Node<T> {
     var value: T
-    var next: Node?
+    var next: Node<T>?
     
-    init(value: T) {
+    init(value: T, next: Node<T>? = nil) {
         self.value = value
+        self.next = next
     }
 }
 
-class LinkedList<T: Equatable> {
-    private var head: Node<T>?
+extension Node: CustomStringConvertible {
+    var description: String {
+        guard let next = next else {
+            return "\(value)"
+        }
+        
+        return "\(value) -> " + String(describing: next) + " "
+    }
+}
+
+
+struct LinkedList<T> {
+    var head: Node<T>?
+    var tail: Node<T>?
     
+    init() {}
+    
+    // 연결리스트가 빈 리스트인지 반환해주는 연산 프로퍼티
     var isEmpty: Bool {
         return head == nil
     }
     
-    var description: String {
-        var currentNode = head
-        var answer = ""
+    
+    // 맨 앞에 노드 추가
+    private mutating func push(_ value: T) {
+        head = Node(value: value, next: head)
         
-        while let node = currentNode {
-            answer += "\(node.value) "
-            
-            if node.next != nil {
-                answer += "-> "
-            }
-            
-            currentNode = node.next
+        if tail == nil {
+            tail = head
         }
-        
-        return answer
     }
     
-    func append(_ value: T) {
-        let node = Node<T>(value: value)
-        
-        guard head != nil else {
-            return head = node
-        }
-        
+    // 특정 위치 노드 반환
+    func node(at index: Int) -> Node<T>? {
         var currentNode = head
+        var currentIndex = 0
         
-        while let node = currentNode?.next {
-            currentNode = node
-        }
-        
-        currentNode?.next = node
-    }
-    
-    // 헤드가 없으면 생성, index가 boundary를 넘어갈 시 마지막에 추가
-    func insert(_ value: T, at index: Int) {
-        let node = Node<T>(value: value)
-        
-        if head == nil {
-            return head = node
-        }
-        
-        var currentNode = head
-        
-        for _ in 0..<(index - 1) {
-            if currentNode?.next == nil {
-                break
-            }
-            
+        while currentNode != nil && currentIndex < index {
             currentNode = currentNode?.next
+            currentIndex += 1
         }
         
-        let nextNode = currentNode?.next
-        currentNode?.next = node
-        currentNode?.next?.next = nextNode
+        return currentNode
     }
     
-    func removeLast() {
-        if head == nil {
+    // 맨 뒤에 노드 추가
+    mutating func append(_ value: T) {
+    
+        guard !isEmpty else {
+            push(value)
             return
         }
         
-        if head?.next == nil {
-            return head = nil
-        }
-        
-        var node = head
-        
-        while node?.next?.next != nil {
-            node = node?.next
-        }
-        
-        node?.next = nil
+        self.tail?.next = Node(value: value)
+        self.tail = self.tail?.next
     }
     
-    func remove(at index: Int) {
-        if head == nil {
+    // 특정 노드 뒤에 노드 추가
+    mutating func insert(_ value: T, after node: Node<T>) {
+        guard tail !== node else {
+            append(value)
             return
         }
         
-        if index == 0 || head?.next == nil {
-            return head = head?.next
-        }
-        
-        var node = head
-        
-        for _ in 0..<(index - 1) {
-            if node?.next?.next == nil {
-                break
-            }
+        node.next = Node<T>(value: value, next: node.next)
+    }
+    
+    // 맨 앞의 노드 제거
+    mutating func pop() -> T? {
+        defer { // 함수 반환 직전 노드 반환
+            head = head?.next
             
-            node = node?.next
+            if isEmpty {
+                tail = nil
+            }
         }
         
-        node?.next = node?.next?.next
+        return head?.value
     }
     
-    func findNode(_ value: T) -> Node<T>? {
-        if head == nil {
+    // 맨 뒤의 노드 제거
+    mutating func removeLast() -> T? {
+        guard let head = head else {
             return nil
         }
         
-        var node = head
-        
-        while node != nil {
-            if node?.value == value {
-                break
-            }
-            
-            node = node?.next
+        guard head.next != nil else {
+            return pop()
         }
         
-        return node
+        var prev = head
+        var current = head
+        
+        while let next = current.next {
+            prev = current
+            current = next
+        }
+        
+        prev.next = nil
+        tail = prev
+        
+        return current.value
+    }
+}
+
+// 연결 리스트를 출력하기 위한 CustomStringConvertible 프로토콜 구현
+extension LinkedList: CustomStringConvertible {
+    var description: String {
+        guard let head = head else {
+            return "Empty Linked List"
+        }
+        
+        return String(describing: head)
     }
 }
